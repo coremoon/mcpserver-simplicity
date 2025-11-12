@@ -1,0 +1,13 @@
+services:
+  mcp-simplicity-server:
+    build: .
+    container_name: mcp-simplicity-server
+    stdin_open: true
+    tty: true
+    volumes:
+      # Mount a workspace for temporary files
+      - ./workspace:/workspace
+    environment:
+      - PYTHONUNBUFFERED=1
+    # The server communicates via stdio, so we don't expose ports
+    # Instead, agents connect via docker exec or named pipes

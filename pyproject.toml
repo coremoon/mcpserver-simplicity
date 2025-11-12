@@ -1,0 +1,129 @@
+[tool.poetry]
+name = "mcp-simplicity-server"
+version = "0.1.0"
+description = "MCP Server for SimplicityHL compilation with AI-powered auto-fix agents"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "mcp_simplicity_server", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+mcp = ">=0.9.0"
+pysimplicityhl = "*"
+anthropic = ">=0.18.0"
+
+[tool.poetry.extras]
+ai = ["anthropic"]
+
+[tool.poetry.group.dev.dependencies]
+poethepoet = "^0.24.0"
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+black = "^23.0.0"
+ruff = "^0.1.0"
+
+[tool.poetry.scripts]
+simc-server = "mcp_simplicity_server.server:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Poethepoet tasks
+[tool.poe.tasks]
+
+[tool.poe.tasks.install]
+help = "Install all dependencies including optional AI features"
+cmd = "poetry install --all-extras"
+
+[tool.poe.tasks.server]
+help = "Start the MCP SimplicityHL server"
+cmd = "python server.py"
+
+[tool.poe.tasks.test]
+help = "Run all example tests"
+cmd = "python test_examples.py"
+
+[tool.poe.tasks.test-docker]
+help = "Run tests against Docker container"
+cmd = "python test_examples.py --docker"
+
+[tool.poe.tasks.agent]
+help = "Run the rule-based auto-fix agent"
+cmd = "python agent_autofix.py"
+
+[tool.poe.tasks.agent-claude]
+help = "Run the Claude-powered auto-fix agent"
+cmd = "python agent_claude.py"
+
+[tool.poe.tasks.agent-docker]
+help = "Run agent against Docker container"
+cmd = "python agent_autofix.py --docker"
+
+[tool.poe.tasks.format]
+help = "Format code with black"
+cmd = "black ."
+
+[tool.poe.tasks.lint]
+help = "Lint code with ruff"
+cmd = "ruff check ."
+
+[tool.poe.tasks.docker-build]
+help = "Build Docker image"
+cmd = "docker-compose build"
+
+[tool.poe.tasks.docker-up]
+help = "Start Docker container"
+cmd = "docker-compose up -d"
+
+[tool.poe.tasks.docker-down]
+help = "Stop Docker container"
+cmd = "docker-compose down"
+
+[tool.poe.tasks.docker-logs]
+help = "Show Docker container logs"
+cmd = "docker-compose logs -f"
+
+# Composite tasks
+[tool.poe.tasks.setup]
+help = "Complete setup: install dependencies and build Docker"
+sequence = ["install", "docker-build"]
+
+[tool.poe.tasks.dev]
+help = "Start development environment"
+sequence = ["docker-up", "server"]
+
+[tool.poe.tasks.test-all]
+help = "Run all tests (local and Docker)"
+sequence = ["test", "test-docker"]
+
+[tool.poe.tasks.clean]
+help = "Clean up temporary files and caches"
+shell = """
+rm -rf .venv __pycache__ .pytest_cache .ruff_cache
+find . -type d -name __pycache__ -exec rm -rf {} +
+find . -type f -name '*.pyc' -delete
+"""
+
+# Custom tasks with arguments
+[tool.poe.tasks.compile]
+help = "Compile a specific SimplicityHL file"
+cmd = "python -c 'import asyncio; from pathlib import Path; asyncio.run(__import__(\"agent_autofix\").compile_file(\"$file\"))'"
+
+[[tool.poe.tasks.compile.args]]
+name = "file"
+help = "Path to .simf file to compile"
+required = true
+
+# Configuration for tools
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
